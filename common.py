@@ -34,6 +34,31 @@ async def get(request):
         results = await connection.fetch('select * from countries')
         return json({'countries':jsonfy(results)})
 
+@common_bp.route('/countries', methods=["POST"])
+async def addcountry(request):
+    name = request.json["name"]
+    two_letter_code = request.json["two_letter_code"]
+    three_letter_code = request.json["three_letter_code"]
+    currency = request.json["currency"]
+    active = True
+    async with common_bp.pool.acquire() as connection:
+        results = await connection.fetch("""
+                    insert into countries("Name", two_letter_code, three_letter_code, currency, active)
+                    values($1, $2, $3, $4, $5) RETURNING ID""", name,two_letter_code, three_letter_code
+                    , currency, active)
+        return json({'id':jsonfy(results)})
+
+        
+@common_bp.route('/getstates/<cid:int>')
+async def get_states_of_country(request, cid):
+    country_id = int(cid)
+    async with common_bp.pool.acquire() as connection:
+        results = await connection.fetch(""" 
+                  select * from states where country_id = ($1) """, country_id)
+        return json({'states':jsonfy(results)})
+
+
+        
 
     
 
