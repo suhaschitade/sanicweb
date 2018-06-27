@@ -6,6 +6,8 @@ from sanic import Sanic
 from sanic.response import json
 from asyncpg import connect, create_pool
 from sanic import Blueprint
+import os
+
 
 def jsonfy(records):
     """
@@ -57,8 +59,36 @@ async def get_states_of_country(request, cid):
                   select * from states where country_id = ($1) """, country_id)
         return json({'states':jsonfy(results)})
 
+@common_bp.route('/roles')
+async def get_roles(request):
+    async with common_bp.pool.acquire() as connection:
+        results = await connection.fetch(""" select * from roles where active=true""")
+        return json({'roles':jsonfy(results)})
 
-        
+@common_bp.route('/companies')
+async def get_companies(request):
+    async with common_bp.pool.acquire as connection:
+        results = await connection.fetch(""" select * from companies where active=true""")
+        return json({'companies':jsonfy(results)})
 
-    
+@common_bp.route('/companies', methods=["OPTIONS","POST","PUT"])
+async def addCompany(request):
+    name = request.form.get('name')
+    url = request.form.get('url')
+    logo = request.files.get('logo')
+  #  print (name , url)
+   # print(request.files)
+    active = True
+    file_parameters = {
+        'body':logo.body,
+        'name':logo.name,
+        'type':logo.type
+    }
+    file_name = request.files.keys()
+    f = open('./uploads/'+logo.name,"wb")
+    f.write(logo.body)
+    f.close()
+
+
+    return json({'file_name':file_name })
 
