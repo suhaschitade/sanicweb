@@ -15,7 +15,6 @@ def jsonfy(records):
     """
     return [dict(r.items()) for r in records]
 
-
 common_bp = Blueprint('common')
 
 app = Sanic()
@@ -67,7 +66,7 @@ async def get_roles(request):
 
 @common_bp.route('/companies')
 async def get_companies(request):
-    async with common_bp.pool.acquire as connection:
+    async with common_bp.pool.acquire() as connection:
         results = await connection.fetch(""" select * from companies where active=true""")
         return json({'companies':jsonfy(results)})
 
@@ -76,6 +75,7 @@ async def addCompany(request):
     name = request.form.get('name')
     url = request.form.get('url')
     logo = request.files.get('logo')
+    active = True
   #  print (name , url)
    # print(request.files)
     active = True
@@ -89,6 +89,29 @@ async def addCompany(request):
     f.write(logo.body)
     f.close()
 
-
-    return json({'file_name':file_name })
+    async with common_bp.pool.acquire() as connection:
+        results = await connection.fetch(""" insert into companies(name, logo, url, active) 
+                   values($1,$2,$3,$4) returning id """, name, logo.name, url, active)
+        return json({'id':results })
+    
+@common_bp.route('/address')
+async def get_address(request):
+    async with common_bp.pool.acquire() as connection:
+        results = await connection.fetch(""" select * from address where active=true """)
+        return json({'address':jsonfy(results)})
+    
+@common_bp.route('/address', methods=["POST"])
+async def add_address(request):
+    address1 = request.json["address1"]
+    address2 = request.json["address2"]
+    city = request.json["city"]
+    state_id = request.json["state_id"]
+    country_id = request.json["country_id"]
+    active = True
+    async with common_bp.pool.acquire() as connection:
+        results = await connection.fetch("""
+                    insert into address(address1, address2, city, state_id, country_id, active)
+                    values($1, $2, $3, $4, $5, $6) RETURNING ID""", address1,address2, city
+                    , state_id,country_id, active)
+        return json({'id':jsonfy(results)})
 

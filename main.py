@@ -6,6 +6,7 @@ from sanic import Sanic
 from sanic.response import json
 from asyncpg import connect, create_pool
 from common import common_bp
+from user_attr import user_attr_bp
 
 
 
@@ -54,6 +55,8 @@ async def createuser(request):
 
 
 app.blueprint(common_bp)
+app.blueprint(user_attr_bp)
+
 
 
 if __name__ == "__main__":
