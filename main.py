@@ -7,7 +7,7 @@ from sanic.response import json
 from asyncpg import connect, create_pool
 from common import common_bp
 from user_attr import user_attr_bp
-
+from article import article_bp
 
 
 def jsonfy(records):
@@ -56,6 +56,8 @@ async def createuser(request):
 
 app.blueprint(common_bp)
 app.blueprint(user_attr_bp)
+app.blueprint(article_bp)
+
 
 
 
